@@ -1,0 +1,50 @@
+entity-relationship-diagram
+
+Users [icon: user, color: blue] {
+  id number pk
+  email string
+  password string
+  roleId number
+}
+
+Products [icon: warehouse, color: red]{
+  id number pk
+  name string
+  price number
+  description string
+}
+
+Orders [icon:office, color:green]{
+  id number pk
+  userId number
+  totalPrice number
+}
+
+ProductOrders [icon:shopping-bag, color: white]{
+  id number pk
+  orderId number
+  productId number
+}
+
+Roles[icon:gcp-administration, color:yellow]{
+  id number pk
+  name string
+}
+
+Entity[icon:table, color:red]{
+  id number pk
+  name string
+}
+
+Permissions[icon:settings, color:green]{
+  id number pk
+  roleId number
+  entityId number
+}
+
+Orders.userId > Users.id
+ProductOrders.orderId > Orders.id
+ProductOrders.productId > Products.id
+Users.roleId > Roles.id
+Permissions.roleId > Roles.id
+Permissions.entityId > Entity.id
