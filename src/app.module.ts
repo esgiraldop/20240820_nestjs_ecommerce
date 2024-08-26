@@ -27,7 +27,7 @@ import { Entities } from './entities/entities/entities.entity';
       database: "e_commerce_nest",
       port: 3306,
       host: "localhost",
-      synchronize: true,
+      // synchronize: true,
       entities: [User, Role, Product, ProductOrder, Order, Permission, Entities],
     })
   ],
