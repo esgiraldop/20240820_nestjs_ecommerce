@@ -11,7 +11,7 @@ export class Order{
     totalPrice: number;
 
     @ManyToOne(()=>User, (user)=>user.orders)
-    user: User
+    user: User;
 
     @OneToMany(() => ProductOrder, (productOrder)=>productOrder.order)
     productOrder: ProductOrder[];

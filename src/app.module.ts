@@ -4,7 +4,7 @@ import { Module } from '@nestjs/common';
 import { UsersModule } from './users/users.module';
 import { RolesModule } from './roles/roles.module';
 import { ProductsModule } from './products/products.module';
-import { ProducOrdersModule } from './productOrders/productOrders.module';
+import { ProductOrdersModule } from './productOrders/productOrders.module';
 import { OrdersModule } from './orders/orders.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { EntitiesModule } from './entities/entities.module';
@@ -19,7 +19,7 @@ import { Entities } from './entities/entities/entities.entity';
 
 @Module({
   imports: [
-    UsersModule, RolesModule, ProductsModule, ProducOrdersModule, OrdersModule, PermissionsModule, EntitiesModule,
+    UsersModule, RolesModule, ProductsModule, ProductOrdersModule, OrdersModule, PermissionsModule, EntitiesModule,
     TypeOrmModule.forRoot({
       type: "mysql",
       username: "root",
