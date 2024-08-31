@@ -1,86 +1,79 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Order } from './entities/orders.entity';
-import { Repository, DataSource, EntityManager } from 'typeorm';
+import { DataSource, Repository, Transaction } from 'typeorm';
 import { CreateOrderDto } from './dtos/createOrder.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProductsService } from 'src/products/products.service';
 import { ProductOrdersService } from 'src/productOrders/product-orders.service';
 import { UsersService } from 'src/users/users.service';
+import { ProductOrder } from 'src/productOrders/entities/productOrders.entity';
 
 @Injectable()
 export class CreateOrderService {
-  constructor(
-    @InjectRepository(Order) private orderRepository: Repository<Order>,
-    private productService: ProductsService,
-    private productOrdersService: ProductOrdersService,
-    private usersService: UsersService,
-    private dataSource: DataSource
-  ) {}
+    constructor(
+        @InjectRepository(Order) private orderRepository:Repository<Order>,
+        private productService: ProductsService,
+        private productOrdersService: ProductOrdersService,
+        private usersService: UsersService,
+        private dataSource: DataSource
+    ){}
 
-  async createOrder(orderData: CreateOrderDto): Promise<Order> {
-    try{
-        return this.dataSource.transaction(async (transactionalEntityManager: EntityManager) => {
-            // Checking if the user exists
-            const userData = await this.usersService.getUserById(orderData.userId);
-            if (!userData) {
-              throw new NotFoundException("The user does not exist");
-            }
-      
-            const ProductData = await this.productService.getProductById(orderData.productId);
-            if (!ProductData) {
-              throw new NotFoundException("The product does not exist");
-            }
-      
-            // Calculating total price of the order
-            const totalPrice = ProductData.price * orderData.amount;
-      
-            // Creating order
-            const newOrder = this.orderRepository.create({
-              totalPrice,
-              user: { id: orderData.userId }
-            });
-      
-            const orderResponse = await transactionalEntityManager.save(Order, newOrder);
-      
-            // Creating the productOrder
-            await this.createProductOrderWithinTransaction(
-              transactionalEntityManager,
-              orderResponse.id,
-              ProductData.id
-            );
-      
-            return orderResponse;
-        });
-    }catch (error) {
-        // If there's an error, the transaction will automatically roll back
-        if (error instanceof NotFoundException) {
-            // Re-throw NotFoundException to maintain specific error handling
-            throw error;
+    async createOrder(
+        orderData:CreateOrderDto,
+    ):Promise<Order>{
+
+        //Checking if the user exists
+        const userData = await this.usersService.getUserById(orderData.userId)
+        if(!userData){
+            throw new NotFoundException("The user does not exist")
         }
-        throw new ConflictException("The order could not be created");
+        
+        const ProductData = await this.productService.getProductById(orderData.productId)
+
+        if(!ProductData){
+            throw new NotFoundException("The product does not exist")
+        }
+
+        // Calculating total price of the order
+        const totalPrice = ProductData.price * orderData.amount
+        
+        // Start a transaction. In a transaction, if one of the query fails, all the other queries are rolled back, so no partial data is inserted
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        try{
+            // Creating order
+            const orderResponse = await queryRunner.manager.save(Order, {
+                totalPrice,
+                user: {id: orderData.userId}
+            })
+
+            // Creating order
+            await queryRunner.manager.save(ProductOrder, {
+                order: {id:orderResponse.id},
+                product: {id:ProductData.id}
+            })
+
+            await queryRunner.commitTransaction();
+
+            return orderResponse
+        }catch(error){
+            // If there's an error, rollback the changes
+            await queryRunner.rollbackTransaction();
+            throw new ConflictException("The order could not be created");
+        }finally{
+            // Release the query runner which is manually created
+            await queryRunner.release();
+        }
     }
-  }
-
-  private async createProductOrderWithinTransaction(
-    transactionalEntityManager: EntityManager,
-    orderId: number,
-    productId: number
-  ): Promise<void> {
-    const productOrderData = {
-      order: { id: orderId },
-      product: { id: productId }
-    };
-
-    // Assuming ProductOrder is the entity for product orders
-    await transactionalEntityManager.save('ProductOrder', productOrderData);
-  }
 }
 
 @Injectable()
-export class OrdersService {
-  constructor(private createOrderService: CreateOrderService) {}
+export class OrdersService{
+    constructor(private createOrderService:CreateOrderService){}
 
-  async createOrder(orderData: CreateOrderDto): Promise<Order> {
-    return await this.createOrderService.createOrder(orderData);
-  }
+    async createOrder(orderData:CreateOrderDto):Promise<Order>{
+        return await this.createOrderService.createOrder(orderData)
+    }
 }
