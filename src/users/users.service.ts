@@ -1,15 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { User } from './entities/users.entity';
 import { createUserDto } from './dtos/createUser.dto';
+import { RolesService } from 'src/roles/roles.service';
 
 @Injectable()
 export class CreateUserService {
-    constructor(@InjectRepository(User) private userRepository:Repository<User>){}
+    constructor(
+        @InjectRepository(User) private userRepository:Repository<User>,
+        private rolesService:RolesService
+    ){}
 
     async createUser(userData:createUserDto):Promise<User>{
-        const newUser = this.userRepository.create(userData)
+        const role = await this.rolesService.getRoleById(userData.roleId);
+
+        if(!role){
+            throw new NotFoundException("The role does not exists")
+        };
+
+        const newUser = this.userRepository.create({
+            ...userData, 
+            role: {id: userData.roleId}
+        });
         return await this.userRepository.save(newUser)
     }
 }

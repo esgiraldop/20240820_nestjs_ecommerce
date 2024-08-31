@@ -16,6 +16,7 @@ import { ProductOrder } from './productOrders/entities/productOrders.entity';
 import { Order } from './orders/entities/orders.entity';
 import { Permission } from './permissions/entities/permissions.entity';
 import { Entities } from './entities/entities/entities.entity';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -29,7 +30,8 @@ import { Entities } from './entities/entities/entities.entity';
       host: "localhost",
       // synchronize: true,
       entities: [User, Role, Product, ProductOrder, Order, Permission, Entities],
-    })
+    }),
+    AuthModule
   ],
   // controllers: [AppController],
   // providers: [AppService],
