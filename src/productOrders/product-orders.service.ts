@@ -15,8 +15,7 @@ export class CreateProductOrderService {
             product: {id: productOrderData.product.id}
         })
 
-        // return await this.productorderRepository.save(newProductOrder)
-        return newProductOrder
+        return await this.productorderRepository.save(newProductOrder)
     }
 }
 

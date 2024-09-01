@@ -40,8 +40,17 @@ export class GetAllUsersService{
 export class GetUserByIdService{
     constructor(@InjectRepository(User) private userRepository:Repository<User>){}
 
-    async getAllUsers(id:number):Promise<User>{
-        return await this.userRepository.findOne({where:{id:id}})
+    async getUserById(id:number):Promise<User>{
+        return await this.userRepository.findOne({where:{id}})
+    }
+}
+
+@Injectable()
+export class getUserByEmailService{
+    constructor(@InjectRepository(User) private userRepository:Repository<User>){}
+
+    async getUserByEmail(email:string):Promise<User>{
+        return await this.userRepository.findOne({where:{email}})
     }
 }
 
@@ -69,6 +78,7 @@ export class UsersService{
         private createUserService:CreateUserService,
         private getAllUsersService:GetAllUsersService,
         private getUserByIdService: GetUserByIdService,
+        private getUserByEmailService: getUserByEmailService,
         private updateUserService: UpdateUserService,
         private deleteUserService: DeleteUserService
     ){}
@@ -82,7 +92,11 @@ export class UsersService{
     }
 
     async getUserById(id:number):Promise<User>{
-        return this.getUserByIdService.getAllUsers(id)
+        return this.getUserByIdService.getUserById(id)
+    }
+
+    async getUserByEmail(email:string):Promise<User>{
+        return this.getUserByEmailService.getUserByEmail(email)
     }
 
     async updateUser(id:number, newUserData:Partial<createUserDto>):Promise<UpdateResult>{

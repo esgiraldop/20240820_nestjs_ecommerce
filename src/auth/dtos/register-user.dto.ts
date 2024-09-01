@@ -1,6 +1,7 @@
-import { IsEmail, IsInt, IsPositive, IsString, Matches, MinLength } from "class-validator";
+import { IsEmail, IsString, Matches, MinLength } from "class-validator";
 
-export class createUserDto {
+
+export class registerUserDto{
     @IsEmail()
     email: string;
 
@@ -12,8 +13,4 @@ export class createUserDto {
         message: 'Password must contain at least one letter, one number, and one special character.',
     })
     password: string;
-    
-    @IsInt()
-    @IsPositive()
-    roleId: number;
 }
